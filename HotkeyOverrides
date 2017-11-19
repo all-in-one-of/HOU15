@@ -1,0 +1,8 @@
+h.pane.gview.primitive_snap_toggle	"Toggle Primitive Snapping"	"Toggle primitive snapping"	 U
+h.pane.wsheet.tool:wrangle	"AttribWrangle (W)"	"Shelf Tool: AttribWrangle (W)"	 W
+h.pane.wsheet.hide	"Hide Selected"	"Hide selected operators"	 Shift+E
+h.pane.wsheet.tool:null	"Null (N)"	"Shelf Tool: Null (N)"	 N
+h.pane.gview.tool:BG_color	"BG Color"	"Shelf Tool: BG Color"	 C
+h.pane.wsheet.tool:merge	"Merge (M)"	"Shelf Tool: Merge (M)"	 M
+h.pane.wsheet.tool:xform	"Transform (X)"	"Shelf Tool: Transform (X)"	 T
+h.pane.wsheet.expose	"Expose All"	"Expose all hidden operators"	 Ctrl+Shift+E
