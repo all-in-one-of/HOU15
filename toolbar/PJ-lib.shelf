@@ -1,0 +1,968 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<shelfDocument>
+  <!-- This file contains definitions of shelves, toolbars, and tools.
+ It should not be hand-edited when it is being used by the application.
+ Note, that two definitions of the same element are not allowed in
+ a single file. -->
+
+  <toolshelf name="pjlib" label="PJ-lib">
+    <memberTool name="scene_setup"/>
+    <memberTool name="set_variables"/>
+    <memberTool name="alembic_extract0"/>
+    <memberTool name="fbx_extract"/>
+    <memberTool name="delayedload"/>
+    <memberTool name="hip_comment"/>
+    <memberTool name="add2force0"/>
+    <memberTool name="Add2Matte0"/>
+    <memberTool name="merge_vdb"/>
+    <memberTool name="select_type0"/>
+    <memberTool name="merge0"/>
+    <memberTool name="wrangle0"/>
+    <memberTool name="null0"/>
+    <memberTool name="BG_color0"/>
+    <memberTool name="Open_renders0"/>
+    <memberTool name="cache1"/>
+    <memberTool name="hip1"/>
+    <memberTool name="flipbook0"/>
+  </toolshelf>
+
+  <tool name="delayedload" label="Delayed Load" icon="SOP_attribcomposite">
+    <helpText><![CDATA[""" Just click the node(s) which has the path to your caches (works with Rop output, Geometry, file and file cache nodes) and click the tool. Voila! It creates a delayed load setup for the caches. """]]></helpText>
+    <script scriptType="python"><![CDATA[#Delayed_load_script_by Kishen PJ     |
+#v2.1 on 14_Nov_2017 for HoudiniFX    |
+#Please share                      |
+#kishenpj@gmail.com                   |
+#--------------------------------------
+
+#function for node variable: return type, description and name
+def extract_getTypeName(node):
+    nodetype = node.type()
+    description = nodetype.description()
+    type_name = nodetype.name() 
+    return type_name
+    
+#show selection tuple names
+selection = hou.selectedNodes()
+print len(selection) 
+print "Selected nodes"
+my_list = ""
+if len(selection) < 1 :
+    my_list = "nothing selected, please select at least one object"
+else:
+    a=1
+    for sel in selection:
+        my_list = "selected object : " + sel.name()
+        a=a+1        
+hou.ui.displayMessage(my_list, buttons=('OK',))
+
+#for each object in selection
+lenght = len(selection)
+for i in range(lenght):
+
+#create python variable for selected node
+    selected = hou.selectedNodes()[i]
+    nodename = selected.name()
+    print nodename
+    print "DONE!"
+    if selected:
+       meshop=hou.node('/shop');
+       meshop=meshop.createNode('vm_geo_file');
+       meshop.setName('delayed_load_shop_' + nodename)
+       meshop.setColor(hou.Color((0,0,0)))
+       targetdshop=meshop.path();
+       meobj=hou.node('/obj')
+       meobj=meobj.createNode("geo");
+       meobj.setParms({"shop_geometrypath":targetdshop});
+       meobj.setName('DELAYED_load_' + nodename)
+       meobj.setColor(hou.Color((0,0,0)))
+       targetfile=selected.parm('file') or selected.parm('sopoutput') 
+       mefile=meobj.node('file1')
+       mefile.setName('Check_' + nodename)
+       mefile.setColor(hou.Color((0,0.333,0)))
+       mefile.parm("file").set(targetfile)
+       mefile.parm("loadtype").set('delayed')
+       meobj.parm("geo_velocityblur").set(1)
+       meobj.parm("vm_forcegeometry").set(0)
+       meshop.parm("file").set(targetfile)]]></script>
+  </tool>
+
+  <tool name="alembic_extract0" label=".abc Extract" icon="SOP_connectadjacentpieces">
+    <helpText><![CDATA[""" Select alembics and click this tool to extract and merge them in to one. """]]></helpText>
+    <script scriptType="python"><![CDATA[#create a new node from an alembic import file 
+#that grab all geo node and merge it together
+#by Richard Clement Tam
+#last update April 2016
+
+#function for node variable: return type, description and name
+def extract_getTypeName(node):
+    nodetype = node.type()
+    description = nodetype.description()
+    type_name = nodetype.name() 
+    return type_name
+    
+#show selection tuple names
+selection = hou.selectedNodes()
+my_list = ""
+if len(selection) < 1 :
+    my_list = "nothing selected, please select at least one object"
+else:
+    a=1
+    for sel in selection:
+        my_list = my_list + "\n" + "selected object " + str(a) + ":" + sel.name()
+        a=a+1        
+hou.ui.displayMessage(my_list, buttons=('OK',))
+
+#for each object in selection
+lenght = len(selection)
+print str(lenght) + " Node(s) selected"
+for i in range(lenght):
+    #create python variable for selected node
+    selected = hou.selectedNodes()[i]
+    
+    #grab all children of selected node
+    content=selected.recursiveGlob("*")
+    
+    #place and create new geo node on pointed cursor position as a container
+    oFindPane = hou.ui.paneTabOfType(hou.paneTabType.NetworkEditor)
+    oFindUiPos = oFindPane.selectPosition()
+    oFindLoc = hou.node("/obj")
+    newObject = oFindLoc.createNode("geo", run_init_scripts=False)
+    newObject.setPosition(oFindUiPos)
+    oName = selected.name()
+    
+    #set new name on new geo node container
+    try :
+        newObject.setName(oName+"_merge_geo")
+    except:
+        pass
+    
+    #grab all geo nodes from selected node and merge it
+    #to the new geo node container
+    newOppath=newObject.path()
+    container=hou.node(newOppath)
+    for each in content:
+        if extract_getTypeName(each) == 'alembic':
+            try:
+                merge=container.createNode("object_merge")
+                merge.setName(each.name())
+                merge.parm('numobj').set(1)
+                merge.parm('xformpath').set('.')
+                merge.parm('objpath1').set(each.path())
+                #print each.path()                
+            except:
+                pass
+
+    #create new merge node inside new geo node and set inputs of merge node
+    oTuple = newObject.children()
+    oNewMerge = container.createNode("merge")
+    n=0
+    for i in oTuple :
+        oNewMerge.setInput(n,i)
+        n=n+1
+    
+    #create new unpack and convert nodes inside new geo node and set inputs of merge node
+    oNewUnpack = container.createNode("unpack")
+    oNewUnpack.setInput(0, oNewMerge)
+    #
+    oNewConvert = container.createNode("convert")
+    oNewConvert.setInput(0, oNewUnpack)
+    #
+    oNewFacet = container.createNode("facet")
+    oNewFacet.setInput(0, oNewConvert)
+    sPathFacet = oNewFacet.path()
+    oNewFacet.parm('postnml').set(1)
+    #
+    oNewNull = container.createNode("null")
+    oNewNull.setInput(0, oNewFacet)
+    
+    #set layout and display flag
+    newObject.layoutChildren()
+    oNewNull.setDisplayFlag(True)
+    oNewNull.setRenderFlag(True)
+    oNewNull.setName("OUT")]]></script>
+  </tool>
+
+  <tool name="alembic_extract" label=".abc Extract" icon="SOP_connectadjacentpieces">
+    <script scriptType="python"><![CDATA[#create a new node from an alembic import file 
+#that grab all geo node and merge it together
+#by Richard Clement Tam
+#last update April 2016
+
+#function for node variable: return type, description and name
+def extract_getTypeName(node):
+    nodetype = node.type()
+    description = nodetype.description()
+    type_name = nodetype.name() 
+    return type_name
+    
+#show selection tuple names
+selection = hou.selectedNodes()
+my_list = ""
+if len(selection) < 1 :
+    my_list = "nothing selected, please select at least one object"
+else:
+    a=1
+    for sel in selection:
+        my_list = my_list + "\n" + "selected object " + str(a) + ":" + sel.name()
+        a=a+1        
+hou.ui.displayMessage(my_list, buttons=('OK',))
+
+#for each object in selection
+lenght = len(selection)
+print str(lenght) + " Node(s) selected"
+for i in range(lenght):
+    #create python variable for selected node
+    selected = hou.selectedNodes()[i]
+    
+    #grab all children of selected node
+    content=selected.recursiveGlob("*")
+    
+    #place and create new geo node on pointed cursor position as a container
+    oFindPane = hou.ui.paneTabOfType(hou.paneTabType.NetworkEditor)
+    oFindUiPos = oFindPane.selectPosition()
+    oFindLoc = hou.node("/obj")
+    newObject = oFindLoc.createNode("geo", run_init_scripts=False)
+    newObject.setPosition(oFindUiPos)
+    oName = selected.name()
+    
+    #set new name on new geo node container
+    try :
+        newObject.setName(oName+"_merge_geo")
+    except:
+        pass
+    
+    #grab all geo nodes from selected node and merge it
+    #to the new geo node container
+    newOppath=newObject.path()
+    container=hou.node(newOppath)
+    for each in content:
+        if extract_getTypeName(each) == 'alembic':
+            try:
+                merge=container.createNode("object_merge")
+                merge.setName(each.name())
+                merge.parm('numobj').set(1)
+                merge.parm('xformpath').set('.')
+                merge.parm('objpath1').set(each.path())
+                #print each.path()                
+            except:
+                pass
+
+    #create new merge node inside new geo node and set inputs of merge node
+    oTuple = newObject.children()
+    oNewMerge = container.createNode("merge")
+    n=0
+    for i in oTuple :
+        oNewMerge.setInput(n,i)
+        n=n+1
+    
+    #create new unpack and convert nodes inside new geo node and set inputs of merge node
+    oNewUnpack = container.createNode("unpack")
+    oNewUnpack.setInput(0, oNewMerge)
+    #
+    oNewConvert = container.createNode("convert")
+    oNewConvert.setInput(0, oNewUnpack)
+    #
+    oNewFacet = container.createNode("facet")
+    oNewFacet.setInput(0, oNewConvert)
+    sPathFacet = oNewFacet.path()
+    oNewFacet.parm('postnml').set(1)
+    #
+    oNewNull = container.createNode("null")
+    oNewNull.setInput(0, oNewFacet)
+    
+    #set layout and display flag
+    newObject.layoutChildren()
+    oNewNull.setDisplayFlag(True)
+    oNewNull.setRenderFlag(True)
+    oNewNull.setName("OUT")]]></script>
+  </tool>
+
+  <tool name="add2force0" label="Add2ForceObj" icon="VOP_add">
+    <helpText><![CDATA[""" Select nodes and click this tool to add them to forced objects in listed mantra """]]></helpText>
+    <script scriptType="python"><![CDATA[import hou
+
+selection = hou.selectedNodes()
+names = [n.name() for n in selection]
+my_list = ""
+if len(selection) < 1 :
+    my_list = "nothing selected, please select at least one object"
+else:
+    a=1
+    for sel in selection:
+        my_list = my_list + "\n" + "selected object " + str(a) + ":" + sel.name()
+        a=a+1        
+hou.ui.displayMessage(my_list, buttons=('OK',))
+length = len(selection)
+print "Number of nodes selected: " + str(length)
+paths = [n.path() for n in hou.node('/out').allSubChildren()
+         if n.type() == hou.nodeType('Driver/ifd')]
+selected = hou.ui.selectFromTree(choices=paths)
+
+mantras = [hou.node(path) for path in selected]
+for m in mantras:
+    m.parm('forceobject').set(' '.join(n.name() for n in hou.selectedNodes())) # CHANGE PARAMETER NAME AS REQURIED
+    m.parm('vobject').set("")
+    print ("Selected mantra nodes : ") + m.name()
+    new_name=' '.join(names)
+hou.ui.displayMessage("( "+ (new_name) + " )  - added to selected mantra(s) matte objects.", buttons=('*Claps*',))]]></script>
+  </tool>
+
+  <tool name="add2force" label="Add2ForceObj" icon="VOP_add">
+    <script scriptType="python"><![CDATA[import hou
+
+selection = hou.selectedNodes()
+names = [n.name() for n in selection]
+my_list = ""
+if len(selection) < 1 :
+    my_list = "nothing selected, please select at least one object"
+else:
+    a=1
+    for sel in selection:
+        my_list = my_list + "\n" + "selected object " + str(a) + ":" + sel.name()
+        a=a+1        
+hou.ui.displayMessage(my_list, buttons=('OK',))
+length = len(selection)
+print "Number of nodes selected: " + str(length)
+paths = [n.path() for n in hou.node('/out').allSubChildren()
+         if n.type() == hou.nodeType('Driver/ifd')]
+selected = hou.ui.selectFromTree(choices=paths)
+
+mantras = [hou.node(path) for path in selected]
+for m in mantras:
+    m.parm('forceobject').set(' '.join(n.name() for n in hou.selectedNodes())) # CHANGE PARAMETER NAME AS REQURIED
+    m.parm('vobject').set("")
+    print ("Selected mantra nodes : ") + m.name()
+    new_name=' '.join(names)
+hou.ui.displayMessage("( "+ (new_name) + " )  - added to selected mantra(s) matte objects.", buttons=('*Claps*',))]]></script>
+  </tool>
+
+  <tool name="Add2Matte0" label="Add2Matte" icon="VOP_add">
+    <helpText><![CDATA[""" Adds selected nodes to matte objects in listed mantra """]]></helpText>
+    <script scriptType="python"><![CDATA[import hou
+
+selection = hou.selectedNodes()
+names = [n.name() for n in selection]
+my_list = ""
+if len(selection) < 1 :
+    my_list = "nothing selected, please select at least one object"
+else:
+    a=1
+    for sel in selection:
+        my_list = my_list + "\n" + "selected object " + str(a) + ":" + sel.name()
+        a=a+1        
+hou.ui.displayMessage(my_list, buttons=('OK',))
+length = len(selection)
+print "Number of nodes selected: " + str(length)
+paths = [n.path() for n in hou.node('/out').allSubChildren()
+         if n.type() == hou.nodeType('Driver/ifd')]
+selected = hou.ui.selectFromTree(choices=paths)
+
+mantras = [hou.node(path) for path in selected]
+for m in mantras:
+    m.parm('matte_objects').set(' '.join(n.name() for n in hou.selectedNodes())) # CHANGE PARAMETER NAME AS REQURIED
+    print ("Selected mantra nodes : ") + m.name()
+    new_name=' '.join(names)
+hou.ui.displayMessage("( "+ (new_name) + " )  - added to selected mantra(s) matte objects.", buttons=('*Claps*',))
+    ]]></script>
+  </tool>
+
+  <tool name="Add2Matte" label="Add2Matte" icon="VOP_add">
+    <script scriptType="python"><![CDATA[import hou
+
+selection = hou.selectedNodes()
+names = [n.name() for n in selection]
+my_list = ""
+if len(selection) < 1 :
+    my_list = "nothing selected, please select at least one object"
+else:
+    a=1
+    for sel in selection:
+        my_list = my_list + "\n" + "selected object " + str(a) + ":" + sel.name()
+        a=a+1        
+hou.ui.displayMessage(my_list, buttons=('OK',))
+length = len(selection)
+print "Number of nodes selected: " + str(length)
+paths = [n.path() for n in hou.node('/out').allSubChildren()
+         if n.type() == hou.nodeType('Driver/ifd')]
+selected = hou.ui.selectFromTree(choices=paths)
+
+mantras = [hou.node(path) for path in selected]
+for m in mantras:
+    m.parm('matte_objects').set(' '.join(n.name() for n in hou.selectedNodes())) # CHANGE PARAMETER NAME AS REQURIED
+    print ("Selected mantra nodes : ") + m.name()
+    new_name=' '.join(names)
+hou.ui.displayMessage("( "+ (new_name) + " )  - added to selected mantra(s) matte objects.", buttons=('*Claps*',))
+    ]]></script>
+  </tool>
+
+  <tool name="merge_vdb" label="Merge VDBs" icon="SOP_volumemerge">
+    <helpText><![CDATA[""" Merges selected VDBs procedurally. """]]></helpText>
+    <script scriptType="python"><![CDATA[selected_nodes = hou.selectedNodes()
+vdbcombines = []
+
+for x, node in enumerate(selected_nodes):
+    if x < len(selected_nodes)-1:
+        vdbcombine = node.createOutputNode('vdbcombine')
+        vdbcombine.setNextInput(selected_nodes[x+1])
+        vdbcombine.setParms({'operation':'add'})
+        vdbcombines.append(vdbcombine)
+
+for x, vdbcombine in enumerate(vdbcombines):
+    if x < len(vdbcombines)-1:
+        vdbcombine.setInput(1, vdbcombines[x+1])]]></script>
+  </tool>
+
+  <tool name="select_type0" label="Similar nodes" icon="SOP_pointgenerate">
+    <script scriptType="python"><![CDATA[selected_nodes = hou.selectedNodes()
+for node in selected_nodes:
+    type = node.type()
+    parent = node.parent()
+    for child_node in parent.children():
+        if child_node.type() == type:
+            child_node.setSelected(True)]]></script>
+  </tool>
+
+  <tool name="select_type" label="Similar nodes" icon="SOP_pointgenerate">
+    <script scriptType="python"><![CDATA[selected_nodes = hou.selectedNodes()
+for node in selected_nodes:
+    type = node.type()
+    parent = node.parent()
+    for child_node in parent.children():
+        if child_node.type() == type:
+            child_node.setSelected(True)]]></script>
+  </tool>
+
+  <tool name="merge0" label="Merge (M)" icon="SOP_merge">
+    <script scriptType="python"><![CDATA[if(len(hou.selectedNodes()) > 0):
+    nodes = hou.selectedNodes()
+    parent = nodes[0].parent()
+    merge = parent.createNode("merge")
+    
+    for node in hou.selectedNodes():
+        if(node.type().category() == hou.sopNodeTypeCategory()):
+            merge.setNextInput(node)
+        
+    merge.moveToGoodPosition(True, False, True, True) 
+    merge.setSelected(True, True, False)   
+    #merge.setDisplayFlag(True)]]></script>
+  </tool>
+
+  <tool name="merge" label="Merge (M)" icon="SOP_merge">
+    <script scriptType="python"><![CDATA[if(len(hou.selectedNodes()) > 0):
+    nodes = hou.selectedNodes()
+    parent = nodes[0].parent()
+    merge = parent.createNode("merge")
+    
+    for node in hou.selectedNodes():
+        if(node.type().category() == hou.sopNodeTypeCategory()):
+            merge.setNextInput(node)
+        
+    merge.moveToGoodPosition(True, False, True, True) 
+    merge.setSelected(True, True, False)   
+    #merge.setDisplayFlag(True)]]></script>
+  </tool>
+
+  <tool name="wrangle0" label="Wrangle (W)" icon="SOP_attribwrangle">
+    <script scriptType="python"><![CDATA[if(len(hou.selectedNodes()) > 0):
+    node = hou.selectedNodes()[0]
+    if(node.type().category() == hou.sopNodeTypeCategory()):
+        parent = node.parent()
+        wrangle = parent.createNode("attribwrangle")
+        wrangle.setNextInput(node)
+        wrangle.moveToGoodPosition(True, False, True, True) 
+        wrangle.setSelected(True, True, False)  
+        wrangle.setCurrent(True, True)
+       ]]></script>
+  </tool>
+
+  <tool name="wrangle" label="Wrangle (W)" icon="SOP_attribwrangle">
+    <script scriptType="python"><![CDATA[if(len(hou.selectedNodes()) > 0):
+    node = hou.selectedNodes()[0]
+    if(node.type().category() == hou.sopNodeTypeCategory()):
+        parent = node.parent()
+        wrangle = parent.createNode("attribwrangle")
+        wrangle.setNextInput(node)
+        wrangle.moveToGoodPosition(True, False, True, True) 
+        wrangle.setSelected(True, True, False)  
+        wrangle.setCurrent(True, True)
+       ]]></script>
+  </tool>
+
+  <tool name="null0" label="Null (N)" icon="SOP_null">
+    <script scriptType="python"><![CDATA[selected_nodes = hou.selectedNodes()
+for node in selected_nodes:
+    parent = node.parent()
+    null = parent.createNode('null','OUT_')
+    null.setInput(0,node)
+    macolo = hou.Color((0,0,0))
+    null.setColor(macolo)
+    pos = node.position()
+    null.setPosition(pos)
+    null.move([0,-1])
+    #flags
+    null.setSelected(True,True)
+    null.setDisplayFlag(True)
+    null.setRenderFlag(True)]]></script>
+  </tool>
+
+  <tool name="null" label="Null (N)" icon="SOP_null">
+    <script scriptType="python"><![CDATA[selected_nodes = hou.selectedNodes()
+for node in selected_nodes:
+    parent = node.parent()
+    null = parent.createNode('null','OUT_')
+    null.setInput(0,node)
+    macolo = hou.Color((0,0,0))
+    null.setColor(macolo)
+    pos = node.position()
+    null.setPosition(pos)
+    null.move([0,-1])
+    #flags
+    null.setSelected(True,True)
+    null.setDisplayFlag(True)
+    null.setRenderFlag(True)]]></script>
+  </tool>
+
+  <tool name="BG_color0" label="BG Color" icon="SOP_paintfogvolume">
+    <script scriptType="python"><![CDATA[import toolutils
+
+bg = None
+
+try:
+    # cycle next bg
+    if kwargs['ctrlclick']: raise
+    bgs = hou.session.bg[:]
+    bgs = bgs[1:]+bgs[:1]
+    if kwargs['shiftclick']: bgs = ['bw', 'light', 'wb']
+    bg = bgs[0]
+    hou.session.bg = bgs
+except:
+    # set up default bg vars
+    hou.session.bg = ['wb', 'bw', 'light']
+    bg = hou.session.bg[0]
+
+bgs = { 'wb':'dark', 'bw':'grey', 'light':'light' }
+
+hou.hscript("viewdisplay -B %s *" % bg)
+hou.ui.setStatusMessage("Cycled background to %s" % bgs[bg].upper() )]]></script>
+  </tool>
+
+  <tool name="BG_color" label="BG Color" icon="SOP_paintfogvolume">
+    <script scriptType="python"><![CDATA[import toolutils
+
+bg = None
+
+try:
+    # cycle next bg
+    if kwargs['ctrlclick']: raise
+    bgs = hou.session.bg[:]
+    bgs = bgs[1:]+bgs[:1]
+    if kwargs['shiftclick']: bgs = ['bw', 'light', 'wb']
+    bg = bgs[0]
+    hou.session.bg = bgs
+except:
+    # set up default bg vars
+    hou.session.bg = ['wb', 'bw', 'light']
+    bg = hou.session.bg[0]
+
+bgs = { 'wb':'dark', 'bw':'grey', 'light':'light' }
+
+hou.hscript("viewdisplay -B %s *" % bg)
+hou.ui.setStatusMessage("Cycled background to %s" % bgs[bg].upper() )]]></script>
+  </tool>
+
+  <tool name="Open_renders0" label="Renders" icon="ROP_mantra">
+    <script scriptType="python"><![CDATA[unix "start $HIP/render"]]></script>
+  </tool>
+
+  <tool name="Open_renders" label="Renders" icon="ROP_mantra">
+    <script scriptType="python"><![CDATA[unix "start $HIP/render"]]></script>
+  </tool>
+
+  <tool name="cache1" label="Caches" icon="SOP_subnet">
+    <script scriptType="python"><![CDATA[unix "start $CACHE"]]></script>
+  </tool>
+
+  <tool name="cache0" label="Caches" icon="SOP_subnet">
+    <script scriptType="python"><![CDATA[unix "start $CACHE"]]></script>
+  </tool>
+
+  <tool name="hip1" label="HIPs" icon="SOP_bakeode">
+    <script scriptType="python"><![CDATA[unix "start $HIP"]]></script>
+  </tool>
+
+  <tool name="hip0" label="HIPs" icon="SOP_bakeode">
+    <script scriptType="python"><![CDATA[unix "start $HIP"]]></script>
+  </tool>
+
+  <tool name="flipbook0" label="Flipbooks" icon="SOP_visibility">
+    <script scriptType="python"><![CDATA[unix "start $FLIPBOOKS"]]></script>
+  </tool>
+
+  <tool name="hip_comment" label=".hip comment" icon="SOP_attribblur">
+    <helpText><![CDATA[""" Save your scene as backup while working on the current scene. """]]></helpText>
+    <script scriptType="python"><![CDATA[import os.path as op
+import hou
+
+activeSession = hou.hipFile.name()
+
+# Fetch tuple with index of pressed button and input text.
+choice, text = hou.ui.readInput('Type comments message',
+                                help='Type comments description.',
+                                title='Commented HIP',
+                                buttons=('OK', 'Cancel'),
+                                default_choice=1,
+                                close_choice=1)
+
+# If OK was pressed with some non-empty text.
+if choice == 0 and text:
+    path = hou.hipFile.path()
+    dir, name = op.split(path)
+
+    # Discard extension.
+    name = op.splitext(name)[0]
+
+    # Discard one '.anytext' occurence at the end.
+    name = name.rsplit('.', 1)[0]
+
+    # Make new name with input text.
+    new_name = '%s.%s.hip' % (name, text)
+
+    # Finally, create an absolute path to save file to.
+    new = op.normpath(op.join(dir, new_name))
+
+    # Save the file.
+    hou.hipFile.save(file_name=new, save_to_recent_files=False)
+    hou.hipFile.setName(path)
+    print "File saved to - " + (new)]]></script>
+  </tool>
+
+  <tool name="set_variables" label="Set Variables" icon="SOP_group">
+    <helpText><![CDATA[message=hou.ui.displayMessage("Note: This is a one time scene setup tool to be used only during a fresh start of your shot.", buttons=("Continue", "Cancel"))
+if message ==1:
+   hou.ui.displayMessage("Cancelled", buttons=('OK',))
+
+if message ==0:
+
+#Set render path
+    hou.ui.displayMessage("Please Select a directory for your renders")
+    job=hou.hscriptExpression('$JOB')
+    renderDir = hou.ui.selectFile(start_directory = job,
+    title = "Select render path",
+    collapse_sequences = False,
+    file_type = hou.fileType.Directory,
+    multiple_select = False,
+    chooser_mode = hou.fileChooserMode.Read)
+    if renderDir == "":
+       print "RENDER path: Not set / Unchanged "
+    if renderDir != "":
+       hou.hscript("setenv RENDER = '%s'" % renderDir)
+       print "RENDER path: " + renderDir
+
+
+#Set cache path
+    hou.ui.displayMessage("Now select a directory for your caches")
+    job=hou.hscriptExpression('$JOB')
+    cacheDir = hou.ui.selectFile(start_directory = job,
+    title = "Select cache path",
+    collapse_sequences = False,
+    file_type = hou.fileType.Directory,
+    multiple_select = False,
+    chooser_mode = hou.fileChooserMode.Read)
+    if cacheDir == "":
+       print "CACHE path: Not set / Unchanged "
+    if cacheDir != "":
+       hou.hscript("setenv CACHE = '%s'" % cacheDir)
+       print "CACHE path: " + cacheDir
+
+#Set ifds path
+    hou.ui.displayMessage("And finally select a directory for your IFDs")
+    job=hou.hscriptExpression('$JOB')
+    ifdDir = hou.ui.selectFile(start_directory = job,
+    title = "Select IFDs path",
+    collapse_sequences = False,
+    file_type = hou.fileType.Directory,
+    multiple_select = False,
+    chooser_mode = hou.fileChooserMode.Read)
+    if ifdDir == "":
+       print "IFD path: Not set / Unchanged "
+    if ifdDir != "":
+       hou.hscript("setenv IFD = '%s'" % ifdDir)
+       print "IFDs path: " + ifdDir
+       hou.ui.displayMessage("Setup complete", buttons=('OK',))]]></helpText>
+    <script scriptType="python"><![CDATA[message=hou.ui.displayMessage("Note: This is a one time scene setup tool to be used only during a fresh start of your shot.", buttons=("Continue", "Cancel"))
+if message ==1:
+   hou.ui.displayMessage("Cancelled", buttons=('OK',))
+
+if message ==0:
+
+#Set render path
+    hou.ui.displayMessage("Please Select a directory for your renders")
+    job=hou.hscriptExpression('$JOB')
+    renderDir = hou.ui.selectFile(start_directory = job,
+    title = "Select render path",
+    collapse_sequences = False,
+    file_type = hou.fileType.Directory,
+    multiple_select = False,
+    chooser_mode = hou.fileChooserMode.Read)
+    if renderDir == "":
+       print "RENDER path: Not set / Unchanged "
+    if renderDir != "":
+       hou.hscript("setenv RENDER = '%s'" % renderDir)
+       print "RENDER path: " + renderDir
+
+
+#Set cache path
+    hou.ui.displayMessage("Now select a directory for your caches")
+    job=hou.hscriptExpression('$JOB')
+    cacheDir = hou.ui.selectFile(start_directory = job,
+    title = "Select cache path",
+    collapse_sequences = False,
+    file_type = hou.fileType.Directory,
+    multiple_select = False,
+    chooser_mode = hou.fileChooserMode.Read)
+    if cacheDir == "":
+       print "CACHE path: Not set / Unchanged "
+    if cacheDir != "":
+       hou.hscript("setenv CACHE = '%s'" % cacheDir)
+       print "CACHE path: " + cacheDir
+
+#Set ifds path
+    hou.ui.displayMessage("And finally select a directory for your IFDs")
+    job=hou.hscriptExpression('$JOB')
+    ifdDir = hou.ui.selectFile(start_directory = job,
+    title = "Select IFDs path",
+    collapse_sequences = False,
+    file_type = hou.fileType.Directory,
+    multiple_select = False,
+    chooser_mode = hou.fileChooserMode.Read)
+    if ifdDir == "":
+       print "IFD path: Not set / Unchanged "
+    if ifdDir != "":
+       hou.hscript("setenv IFD = '%s'" % ifdDir)
+       print "IFDs path: " + ifdDir
+       hou.ui.displayMessage("Setup complete", buttons=('OK',))]]></script>
+  </tool>
+
+  <tool name="scene_setup" label="Scene setup" icon="SOP_capturecorrect">
+    <script scriptType="python"><![CDATA[#Scene setup tool [v1.1] by Kishen PJ #
+                                      #
+#20 Nov 2017                          #
+                                      #
+#Please do not share this version     #
+                                      #
+#######################################
+message=hou.ui.displayMessage("Note: This is a one time scene setup tool to be used only during a fresh start of your shot.", buttons=("Continue", "Cancel"))
+if message ==1:
+   hou.ui.displayMessage("Cancelled", buttons=('OK',))
+
+if message ==0:
+
+        #STEP 1
+        import toolutils
+        def extract_getTypeName(node):
+                nodetype = node.type()
+                description = nodetype.description()
+                type_name = nodetype.name() 
+                return type_name
+
+        #selection check
+        selection = hou.selectedNodes()
+        if len(selection) < 1 :
+                my_list = "nothing selected, please select at least one object"
+                hou.ui.displayMessage(my_list, buttons=('OK',))
+        else:
+                a=1
+                for sel in selection:
+                        my_list = "selected object : " + sel.name()
+                        a=a+1
+        print len(selection)
+        print "Alembic(s) selected"
+
+        #Set scale (null) node
+        if selection:
+           meobj=hou.node('/obj')
+           meout=hou.node('/out')
+           meobj=meobj.createNode("null");
+           meout=meout.createNode("ifd");
+           meout.setName('RENDER_',1)
+           meout2=hou.node('/out')
+           meout2=meout2.createNode("geometry");
+           meout2.setName('CACHE_',1)
+           meobj.setParms({"scale":0.01});
+           meobj.setName('Scale_scene',1)
+           meobj.setColor(hou.Color((0,0.333,0)))
+          
+        #for each object in selection
+        lenght = len(selection)
+        for i in range(lenght):
+                
+                #create python variable for selected node
+                selected = hou.selectedNodes()[i]
+                pos = selected.position()
+                selected.setInput(0,meobj)
+                selected.setDisplayFlag(False)
+                meobj.setDisplayFlag(False)
+                meobj.setPosition(pos)
+                meobj.move([0,3])
+                
+                #grab all children of selected node
+                content=selected.recursiveGlob("*")
+                
+                #place and create new geo node on pointed cursor position as a container
+                oFindLoc = hou.node("/obj")
+                newObject = oFindLoc.createNode("geo", run_init_scripts=False)
+                #newObject.setPosition(oFindUiPos)
+                oName = selected.name()
+                
+                #set new name on new geo node container
+                try :
+                        newObject.setName(oName+"_alembic_geo")
+                except:
+                        pass
+                
+                #grab all geo nodes from selected node and merge it
+                #to the new geo node container
+                newOppath=newObject.path()
+                container=hou.node(newOppath)
+                for each in content:
+                        if extract_getTypeName(each) == 'alembic':
+                                try:
+                                        merge=container.createNode("object_merge")
+                                        merge.setName(each.name())
+                                        merge.parm('numobj').set(1)
+                                        merge.parm('xformpath').set('.')
+                                        merge.parm('objpath1').set(each.path())               
+                                except:
+                                        pass
+
+                #create new merge node inside new geo node and set inputs of merge node
+                oTuple = newObject.children()
+                oNewMerge = container.createNode("merge")
+                n=0
+                for i in oTuple :
+                        oNewMerge.setInput(n,i)
+                        n=n+1
+                
+                #create new unpack and convert nodes inside new geo node and set inputs of merge node
+                oNewUnpack = container.createNode("unpack")
+                oNewUnpack.setInput(0, oNewMerge)
+                #
+                oNewConvert = container.createNode("convert")
+                oNewConvert.setInput(0, oNewUnpack)
+                #
+                oNewFacet = container.createNode("facet")
+                oNewFacet.setInput(0, oNewConvert)
+                sPathFacet = oNewFacet.path()
+                oNewFacet.parm('postnml').set(1)
+                #
+                oNewNull = container.createNode("null")
+                oNewNull.setInput(0, oNewFacet)
+                
+                #set layout and display flag
+                newObject.layoutChildren()
+                oNewNull.setDisplayFlag(True)
+                oNewNull.setRenderFlag(True)
+                oNewNull.setName("OUT")
+                
+                #clean layout
+                hou.node('/obj').layoutChildren()
+                hou.node('/out').layoutChildren()]]></script>
+  </tool>
+
+  <tool name="fbx_extract" label=".fbx Extract" icon="SOP_connectadjacentpieces">
+    <script scriptType="python"><![CDATA[#create a new node from an fbx import file 
+#that grab all geo node and merge it together
+#by Richard Clement Tam
+#last update April 2016
+
+#function for node variable: return type, description and name
+def extract_getTypeName(node):
+    nodetype = node.type()
+    description = nodetype.description()
+    type_name = nodetype.name() 
+    return type_name
+    
+#show selection tuple names
+selection = hou.selectedNodes()
+print len(selection)
+my_list = ""
+if len(selection) < 1 :
+    my_list = "nothing selected, please select at least one object"
+else:
+    a=1
+    for sel in selection:
+        my_list = my_list + "\n" + "selected object " + str(a) + ":" + sel.name()
+        a=a+1        
+hou.ui.displayMessage(my_list, buttons=('OK',))
+
+#for each object in selection
+lenght = len(selection)
+print "lenght: " + str(lenght)
+for i in range(lenght):
+    #create python variable for selected node
+    selected = hou.selectedNodes()[i]
+    
+    #grab all children of selected node
+    content=selected.recursiveGlob("*")
+    
+    #place and create new geo node on pointed cursor position as a container
+    oFindPane = hou.ui.paneTabOfType(hou.paneTabType.NetworkEditor)
+    oFindUiPos = oFindPane.selectPosition()
+    oFindLoc = hou.node("/obj")
+    newObject = oFindLoc.createNode("geo", run_init_scripts=False)
+    newObject.setPosition(oFindUiPos)
+    oName = selected.name()
+    
+    #set new name on new geo node container
+    try :
+        newObject.setName(oName+"_merge_geo")
+    except:
+        pass
+    
+    #grab all geo nodes from selected node and merge it
+    #to the new geo node container
+    newOppath=newObject.path()
+    container=hou.node(newOppath)
+    for each in content:
+        if extract_getTypeName(each) == 'geo':
+            try:
+                merge=container.createNode("object_merge")
+                merge.setName(each.name())
+                merge.parm('numobj').set(1)
+                merge.parm('xformpath').set('.')
+                merge.parm('objpath1').set(each.path())
+                #print each.path()                
+            except:
+                pass
+
+    #create new merge node inside new geo node and set inputs of merge node
+    oTuple = newObject.children()
+    oNewMerge = container.createNode("merge")
+    n=0
+    for i in oTuple :
+        oNewMerge.setInput(n,i)
+        n=n+1
+    
+    #create new unpack and convert nodes inside new geo node and set inputs of merge node
+    oNewUnpack = container.createNode("unpack")
+    oNewUnpack.setInput(0, oNewMerge)
+    #
+    oNewConvert = container.createNode("convert")
+    oNewConvert.setInput(0, oNewUnpack)
+    #
+    oNewFacet = container.createNode("facet")
+    oNewFacet.setInput(0, oNewConvert)
+    sPathFacet = oNewFacet.path()
+    oNewFacet.parm('postnml').set(1)
+    #
+    oNewNull = container.createNode("null")
+    oNewNull.setInput(0, oNewFacet)
+    
+    #set layout and display flag
+    newObject.layoutChildren()
+    oNewNull.setDisplayFlag(True)
+    oNewNull.setRenderFlag(True)
+    oNewNull.setName("OUT")
+]]></script>
+  </tool>
+</shelfDocument>
