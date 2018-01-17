@@ -24,7 +24,7 @@ Windows
 
     C:\Users\[username]\Documents\houdini[ver#]
 
-	NOTE:
+NOTE:
 	Once installed, make sure to do the following..
 	1.Recheck display (viewport) preferences
 	2.Go to Edit > Preferences > Set externeal expression editor and set to your preferred editor exe path
