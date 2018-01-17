@@ -1,6 +1,7 @@
-h.pane.gview.primitive_snap_toggle	"Toggle Primitive Snapping"	"Toggle primitive snapping"	 U
-h.pane.wsheet.tool:wrangle	"AttribWrangle (W)"	"Shelf Tool: AttribWrangle (W)"	 W
+h.pane.wsheet.tool:blast	"Blast (B)"	"Shelf Tool: Blast (B)"	 B
 h.pane.wsheet.hide	"Hide Selected"	"Hide selected operators"	 Shift+E
+h.pane.wsheet.tool:wrangle	"AttribWrangle (W)"	"Shelf Tool: AttribWrangle (W)"	 W
+h.pane.gview.primitive_snap_toggle	"Toggle Primitive Snapping"	"Toggle primitive snapping"	 U
 h.pane.wsheet.tool:null	"Null (N)"	"Shelf Tool: Null (N)"	 N
 h.pane.gview.tool:BG_color	"BG Color"	"Shelf Tool: BG Color"	 C
 h.pane.wsheet.tool:merge	"Merge (M)"	"Shelf Tool: Merge (M)"	 M

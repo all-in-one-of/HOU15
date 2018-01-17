@@ -5,25 +5,21 @@
  Note, that two definitions of the same element are not allowed in
  a single file. -->
 
-  <toolshelf name="pjlib" label="PJ-lib">
+  <toolshelf name="pjlib" label="PJ-Lib">
     <memberTool name="scene_setup"/>
     <memberTool name="set_variables"/>
     <memberTool name="alembic_extract0"/>
-    <memberTool name="fbx_extract"/>
     <memberTool name="delayedload"/>
-    <memberTool name="hip_comment"/>
-    <memberTool name="add2force0"/>
-    <memberTool name="Add2Matte0"/>
     <memberTool name="merge_vdb"/>
     <memberTool name="select_type0"/>
-    <memberTool name="merge0"/>
-    <memberTool name="wrangle0"/>
-    <memberTool name="null0"/>
-    <memberTool name="BG_color0"/>
-    <memberTool name="Open_renders0"/>
-    <memberTool name="cache1"/>
+    <memberTool name="add2force0"/>
+    <memberTool name="Add2Matte0"/>
     <memberTool name="hip1"/>
+    <memberTool name="cache1"/>
     <memberTool name="flipbook0"/>
+    <memberTool name="Open_renders0"/>
+    <memberTool name="hip_comment"/>
+    <memberTool name="save"/>
   </toolshelf>
 
   <tool name="delayedload" label="Delayed Load" icon="SOP_attribcomposite">
@@ -87,7 +83,7 @@ for i in range(lenght):
   </tool>
 
   <tool name="alembic_extract0" label=".abc Extract" icon="SOP_connectadjacentpieces">
-    <helpText><![CDATA[""" Select alembics and click this tool to extract and merge them in to one. """]]></helpText>
+    <helpText><![CDATA["""Extracts selected alembics or fbx and merges them in to one. """]]></helpText>
     <script scriptType="python"><![CDATA[#create a new node from an alembic import file 
 #that grab all geo node and merge it together
 #by Richard Clement Tam
@@ -413,6 +409,7 @@ for x, vdbcombine in enumerate(vdbcombines):
   </tool>
 
   <tool name="select_type0" label="Similar nodes" icon="SOP_pointgenerate">
+    <helpText><![CDATA[""" Select a node and click this tool to select similar nodes. """]]></helpText>
     <script scriptType="python"><![CDATA[selected_nodes = hou.selectedNodes()
 for node in selected_nodes:
     type = node.type()
@@ -433,6 +430,7 @@ for node in selected_nodes:
   </tool>
 
   <tool name="merge0" label="Merge (M)" icon="SOP_merge">
+    <helpText><![CDATA[""" Press 'M' key to add merge node """]]></helpText>
     <script scriptType="python"><![CDATA[if(len(hou.selectedNodes()) > 0):
     nodes = hou.selectedNodes()
     parent = nodes[0].parent()
@@ -463,6 +461,7 @@ for node in selected_nodes:
   </tool>
 
   <tool name="wrangle0" label="Wrangle (W)" icon="SOP_attribwrangle">
+    <helpText><![CDATA[""" Press 'W' key to add wrangle node """]]></helpText>
     <script scriptType="python"><![CDATA[if(len(hou.selectedNodes()) > 0):
     node = hou.selectedNodes()[0]
     if(node.type().category() == hou.sopNodeTypeCategory()):
@@ -489,6 +488,7 @@ for node in selected_nodes:
   </tool>
 
   <tool name="null0" label="Null (N)" icon="SOP_null">
+    <helpText><![CDATA[""" Press 'N' key to add null node """]]></helpText>
     <script scriptType="python"><![CDATA[selected_nodes = hou.selectedNodes()
 for node in selected_nodes:
     parent = node.parent()
@@ -523,6 +523,7 @@ for node in selected_nodes:
   </tool>
 
   <tool name="BG_color0" label="BG Color" icon="SOP_paintfogvolume">
+    <helpText><![CDATA[""" Press 'C' key to change background colors """]]></helpText>
     <script scriptType="python"><![CDATA[import toolutils
 
 bg = None
@@ -571,7 +572,8 @@ hou.ui.setStatusMessage("Cycled background to %s" % bgs[bg].upper() )]]></script
   </tool>
 
   <tool name="Open_renders0" label="Renders" icon="ROP_mantra">
-    <script scriptType="python"><![CDATA[unix "start $HIP/render"]]></script>
+    <helpText><![CDATA[""" Opens your render folder (works only if variables are set) """]]></helpText>
+    <script scriptType="hscript"><![CDATA[unix "start $RENDER"]]></script>
   </tool>
 
   <tool name="Open_renders" label="Renders" icon="ROP_mantra">
@@ -579,7 +581,8 @@ hou.ui.setStatusMessage("Cycled background to %s" % bgs[bg].upper() )]]></script
   </tool>
 
   <tool name="cache1" label="Caches" icon="SOP_subnet">
-    <script scriptType="python"><![CDATA[unix "start $CACHE"]]></script>
+    <helpText><![CDATA[""" Opens your cache folder (works only if variables are set) """]]></helpText>
+    <script scriptType="hscript"><![CDATA[unix "start $CACHE"]]></script>
   </tool>
 
   <tool name="cache0" label="Caches" icon="SOP_subnet">
@@ -587,7 +590,8 @@ hou.ui.setStatusMessage("Cycled background to %s" % bgs[bg].upper() )]]></script
   </tool>
 
   <tool name="hip1" label="HIPs" icon="SOP_bakeode">
-    <script scriptType="python"><![CDATA[unix "start $HIP"]]></script>
+    <helpText><![CDATA[""" Opens $HIP (work) folder. """]]></helpText>
+    <script scriptType="hscript"><![CDATA[unix "start $HIP"]]></script>
   </tool>
 
   <tool name="hip0" label="HIPs" icon="SOP_bakeode">
@@ -595,10 +599,11 @@ hou.ui.setStatusMessage("Cycled background to %s" % bgs[bg].upper() )]]></script
   </tool>
 
   <tool name="flipbook0" label="Flipbooks" icon="SOP_visibility">
-    <script scriptType="python"><![CDATA[unix "start $FLIPBOOKS"]]></script>
+    <helpText><![CDATA[""" Opens your flipbooks folder (works only if variables are set) """]]></helpText>
+    <script scriptType="hscript"><![CDATA[unix "start $FLIPBOOK"]]></script>
   </tool>
 
-  <tool name="hip_comment" label=".hip comment" icon="SOP_attribblur">
+  <tool name="hip_comment" label=".hip comment" icon="SOP_attribcreate-2.0">
     <helpText><![CDATA[""" Save your scene as backup while working on the current scene. """]]></helpText>
     <script scriptType="python"><![CDATA[import os.path as op
 import hou
@@ -625,7 +630,7 @@ if choice == 0 and text:
     name = name.rsplit('.', 1)[0]
 
     # Make new name with input text.
-    new_name = '%s.%s.hip' % (name, text)
+    new_name = '%s_%s.hip' % (name, text)
 
     # Finally, create an absolute path to save file to.
     new = op.normpath(op.join(dir, new_name))
@@ -637,58 +642,7 @@ if choice == 0 and text:
   </tool>
 
   <tool name="set_variables" label="Set Variables" icon="SOP_group">
-    <helpText><![CDATA[message=hou.ui.displayMessage("Note: This is a one time scene setup tool to be used only during a fresh start of your shot.", buttons=("Continue", "Cancel"))
-if message ==1:
-   hou.ui.displayMessage("Cancelled", buttons=('OK',))
-
-if message ==0:
-
-#Set render path
-    hou.ui.displayMessage("Please Select a directory for your renders")
-    job=hou.hscriptExpression('$JOB')
-    renderDir = hou.ui.selectFile(start_directory = job,
-    title = "Select render path",
-    collapse_sequences = False,
-    file_type = hou.fileType.Directory,
-    multiple_select = False,
-    chooser_mode = hou.fileChooserMode.Read)
-    if renderDir == "":
-       print "RENDER path: Not set / Unchanged "
-    if renderDir != "":
-       hou.hscript("setenv RENDER = '%s'" % renderDir)
-       print "RENDER path: " + renderDir
-
-
-#Set cache path
-    hou.ui.displayMessage("Now select a directory for your caches")
-    job=hou.hscriptExpression('$JOB')
-    cacheDir = hou.ui.selectFile(start_directory = job,
-    title = "Select cache path",
-    collapse_sequences = False,
-    file_type = hou.fileType.Directory,
-    multiple_select = False,
-    chooser_mode = hou.fileChooserMode.Read)
-    if cacheDir == "":
-       print "CACHE path: Not set / Unchanged "
-    if cacheDir != "":
-       hou.hscript("setenv CACHE = '%s'" % cacheDir)
-       print "CACHE path: " + cacheDir
-
-#Set ifds path
-    hou.ui.displayMessage("And finally select a directory for your IFDs")
-    job=hou.hscriptExpression('$JOB')
-    ifdDir = hou.ui.selectFile(start_directory = job,
-    title = "Select IFDs path",
-    collapse_sequences = False,
-    file_type = hou.fileType.Directory,
-    multiple_select = False,
-    chooser_mode = hou.fileChooserMode.Read)
-    if ifdDir == "":
-       print "IFD path: Not set / Unchanged "
-    if ifdDir != "":
-       hou.hscript("setenv IFD = '%s'" % ifdDir)
-       print "IFDs path: " + ifdDir
-       hou.ui.displayMessage("Setup complete", buttons=('OK',))]]></helpText>
+    <helpText><![CDATA[""" Sets houdini variables for various output paths (CACHES,RENDER,IFDs and FLIP BOOKS."""]]></helpText>
     <script scriptType="python"><![CDATA[message=hou.ui.displayMessage("Note: This is a one time scene setup tool to be used only during a fresh start of your shot.", buttons=("Continue", "Cancel"))
 if message ==1:
    hou.ui.displayMessage("Cancelled", buttons=('OK',))
@@ -725,6 +679,22 @@ if message ==0:
     if cacheDir != "":
        hou.hscript("setenv CACHE = '%s'" % cacheDir)
        print "CACHE path: " + cacheDir
+       
+       
+#Set flipbooks path
+    hou.ui.displayMessage("Select a directory for your Flipbooks/Playblasts")
+    job=hou.hscriptExpression('$JOB')
+    fbDir = hou.ui.selectFile(start_directory = job,
+    title = "Select Flipbooks path",
+    collapse_sequences = False,
+    file_type = hou.fileType.Directory,
+    multiple_select = False,
+    chooser_mode = hou.fileChooserMode.Read)
+    if fbDir == "":
+       print "Flipbooks path: Not set / Unchanged "
+    if fbDir != "":
+       hou.hscript("setenv FLIPBOOK = '%s'" % fbDir)
+       print "FLIPBOOKs path: " + fbDir
 
 #Set ifds path
     hou.ui.displayMessage("And finally select a directory for your IFDs")
@@ -744,6 +714,7 @@ if message ==0:
   </tool>
 
   <tool name="scene_setup" label="Scene setup" icon="SOP_capturecorrect">
+    <helpText><![CDATA[""" Sets up a basic scene with selected Alembics/FBXs. """]]></helpText>
     <script scriptType="python"><![CDATA[#Scene setup tool [v1.1] by Kishen PJ #
                                       #
 #20 Nov 2017                          #
@@ -869,100 +840,11 @@ if message ==0:
                 hou.node('/out').layoutChildren()]]></script>
   </tool>
 
-  <tool name="fbx_extract" label=".fbx Extract" icon="SOP_connectadjacentpieces">
-    <script scriptType="python"><![CDATA[#create a new node from an fbx import file 
-#that grab all geo node and merge it together
-#by Richard Clement Tam
-#last update April 2016
+  <tool name="save" label="Save scene" icon="SOP_unix">
+    <script scriptType="python"><![CDATA[activeSession = hou.hipFile.name()
+hou.hipFile.save()
+hou.ui.setStatusMessage("Scene saved " + activeSession)
 
-#function for node variable: return type, description and name
-def extract_getTypeName(node):
-    nodetype = node.type()
-    description = nodetype.description()
-    type_name = nodetype.name() 
-    return type_name
-    
-#show selection tuple names
-selection = hou.selectedNodes()
-print len(selection)
-my_list = ""
-if len(selection) < 1 :
-    my_list = "nothing selected, please select at least one object"
-else:
-    a=1
-    for sel in selection:
-        my_list = my_list + "\n" + "selected object " + str(a) + ":" + sel.name()
-        a=a+1        
-hou.ui.displayMessage(my_list, buttons=('OK',))
-
-#for each object in selection
-lenght = len(selection)
-print "lenght: " + str(lenght)
-for i in range(lenght):
-    #create python variable for selected node
-    selected = hou.selectedNodes()[i]
-    
-    #grab all children of selected node
-    content=selected.recursiveGlob("*")
-    
-    #place and create new geo node on pointed cursor position as a container
-    oFindPane = hou.ui.paneTabOfType(hou.paneTabType.NetworkEditor)
-    oFindUiPos = oFindPane.selectPosition()
-    oFindLoc = hou.node("/obj")
-    newObject = oFindLoc.createNode("geo", run_init_scripts=False)
-    newObject.setPosition(oFindUiPos)
-    oName = selected.name()
-    
-    #set new name on new geo node container
-    try :
-        newObject.setName(oName+"_merge_geo")
-    except:
-        pass
-    
-    #grab all geo nodes from selected node and merge it
-    #to the new geo node container
-    newOppath=newObject.path()
-    container=hou.node(newOppath)
-    for each in content:
-        if extract_getTypeName(each) == 'geo':
-            try:
-                merge=container.createNode("object_merge")
-                merge.setName(each.name())
-                merge.parm('numobj').set(1)
-                merge.parm('xformpath').set('.')
-                merge.parm('objpath1').set(each.path())
-                #print each.path()                
-            except:
-                pass
-
-    #create new merge node inside new geo node and set inputs of merge node
-    oTuple = newObject.children()
-    oNewMerge = container.createNode("merge")
-    n=0
-    for i in oTuple :
-        oNewMerge.setInput(n,i)
-        n=n+1
-    
-    #create new unpack and convert nodes inside new geo node and set inputs of merge node
-    oNewUnpack = container.createNode("unpack")
-    oNewUnpack.setInput(0, oNewMerge)
-    #
-    oNewConvert = container.createNode("convert")
-    oNewConvert.setInput(0, oNewUnpack)
-    #
-    oNewFacet = container.createNode("facet")
-    oNewFacet.setInput(0, oNewConvert)
-    sPathFacet = oNewFacet.path()
-    oNewFacet.parm('postnml').set(1)
-    #
-    oNewNull = container.createNode("null")
-    oNewNull.setInput(0, oNewFacet)
-    
-    #set layout and display flag
-    newObject.layoutChildren()
-    oNewNull.setDisplayFlag(True)
-    oNewNull.setRenderFlag(True)
-    oNewNull.setName("OUT")
 ]]></script>
   </tool>
 </shelfDocument>
