@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<shelfDocument>
+  <!-- This file contains definitions of shelves, toolbars, and tools.
+ It should not be hand-edited when it is being used by the application.
+ Note, that two definitions of the same element are not allowed in
+ a single file. -->
+
+  <shelfSetEdit name="shelf_set_1" fileLocation="C:/PROGRA~1/SIDEEF~1/HOUDIN~1.607/houdini/toolbar\ShelfDefinitions.shelf">
+    <addMemberToolshelf name="pjlib" inPosition="13"/>
+    <removeMemberToolshelf name="create" fromPosition="0"/>
+    <removeMemberToolshelf name="modify" fromPosition="0"/>
+    <removeMemberToolshelf name="model" fromPosition="0"/>
+    <removeMemberToolshelf name="polygon" fromPosition="0"/>
+    <removeMemberToolshelf name="deform" fromPosition="0"/>
+    <removeMemberToolshelf name="texture" fromPosition="0"/>
+    <removeMemberToolshelf name="rigging" fromPosition="0"/>
+    <removeMemberToolshelf name="character" fromPosition="0"/>
+    <removeMemberToolshelf name="animation" fromPosition="0"/>
+    <removeMemberToolshelf name="hair" fromPosition="0"/>
+    <removeMemberToolshelf name="grooming" fromPosition="0"/>
+    <removeMemberToolshelf name="cloud" fromPosition="0"/>
+    <removeMemberToolshelf name="volume" fromPosition="0"/>
+    <addMemberToolshelf name="rbd_dynamics" inPosition="1"/>
+    <addMemberToolshelf name="ocean" inPosition="2"/>
+    <addMemberToolshelf name="pyro_dynamics" inPosition="3"/>
+    <addMemberToolshelf name="melting_dynamics" inPosition="4"/>
+    <addMemberToolshelf name="liquid_dynamics" inPosition="5"/>
+  </shelfSetEdit>
+</shelfDocument>

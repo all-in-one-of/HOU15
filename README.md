@@ -24,12 +24,11 @@ Windows
 
     C:\Users\[username]\Documents\houdini[ver#]
 
-# NOTE:
+
+## NOTE:
 	
 Once installed, make sure to do the following..
 
+1.Change the path of QLIB in houdini env file before opening houdini
 
-1.Recheck display (viewport) preferences
-
-
-2.Go to Edit > Preferences > Set externeal expression editor and set to your preferred editor exe path
+2.Go to Edit > Preferences > Set external expression editor and set to your preferred editor exe path
