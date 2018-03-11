@@ -19,6 +19,8 @@
     <memberTool name="flipbook0"/>
     <memberTool name="Open_renders0"/>
     <memberTool name="hip_comment"/>
+    <memberTool name="convert"/>
+    <memberTool name="Read_Nodes"/>
     <memberTool name="save"/>
   </toolshelf>
 
@@ -845,6 +847,20 @@ if message ==0:
 hou.hipFile.save()
 hou.ui.setStatusMessage("Scene saved " + activeSession)
 
+]]></script>
+  </tool>
+
+  <tool name="Read_Nodes" label="TempRead" icon="SOP_trace">
+    <script scriptType="python"><![CDATA[ReadCmd = hou.ui.selectFile(start_directory=None)
+finalpath= hou.expandString(ReadCmd)
+test=hou.hscript('cmdread ' +finalpath)
+print "DONE"]]></script>
+  </tool>
+
+  <tool name="convert" label="Conv2Temp" icon="SOP_grouppromote">
+    <script scriptType="python"><![CDATA[tempwrite=hou.ui.selectFile(start_directory=None)
+finalpath=hou.expandString(tempwrite)
+hou.hscript('opscript -G -r / >'+finalpath)
 ]]></script>
   </tool>
 </shelfDocument>
